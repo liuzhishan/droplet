@@ -1,0 +1,36 @@
+[package]
+name = "reader"
+version = "0.0.1"
+authors = ["liuzhishan <liuzhishan01@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+description = "reader for droplet."
+
+[dependencies]
+log = "0.4"
+env_logger = "0.7"
+anyhow = "1.0"
+chrono = "0.4.38"
+clap = {  version = "4.5.13", features = [ "derive" ] }
+clap_derive = { version = "4.0.0-rc.1" }
+tokio = { version = "1.39", features = ["full"] }
+tracing = "0.1.37"
+tonic = "0.12"
+tonic-types = "0.12"
+prost = "0.13.1"
+prost-types = "0.13.1"
+async-channel = "2.3.1"
+base64 = "0.22.1"
+rand = "0.8.5"
+num_cpus = "1.16"
+hashbrown = "0.11.2"
+tokio-graceful-shutdown = "0.15.1"
+strum = { version = "0.26", features = ["derive"] }
+strum_macros = "0.26"
+likely_stable = "0.1"
+coarsetime = "0.1"
+fnv = "1.0.3"
+sync-unsafe-cell = "0.1.1"
+core = { path = "../core" }
+gridbuffer = { path = "../../gridbuffer" }
