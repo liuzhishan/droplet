@@ -1,11 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-  "core",
-  "meta_server",
-  "sinker",
-  "writer",
-  "reader",
-  "server",
-  "client",
+  "droplet-core",
+  "droplet-meta-server",
+  "droplet-sinker",
+  "droplet-server",
+  "droplet-client",
 ]

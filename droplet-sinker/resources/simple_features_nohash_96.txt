@@ -1,0 +1,1 @@
+../../droplet-core/resources/simple_features_nohash_96.txt

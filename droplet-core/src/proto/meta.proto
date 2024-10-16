@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package droplet;
+
+import "google/protobuf/timestamp.proto";
+
+// Represents a node in the cluster
+message Node {
+  string id = 1;
+  string address = 2;
+  NodeStatus status = 3;
+  google.protobuf.Timestamp last_heartbeat = 4;
+}
+
+// Possible statuses for a node
+enum NodeStatus {
+  UNKNOWN = 0;
+  HEALTHY = 1;
+  UNHEALTHY = 2;
+  OFFLINE = 3;
+}
+
+// Represents a shard of data
+message Shard {
+  string id = 1;
+  string node_id = 2;
+  uint64 size_bytes = 3;
+}
+
+// Represents the cluster topology
+message ClusterTopology {
+  repeated Node nodes = 1;
+  repeated Shard shards = 2;
+}
+
+// Request to register a new node
+message RegisterNodeRequest {
+  string address = 1;
+}
+
+// Response to node registration
+message RegisterNodeResponse {
+  string node_id = 1;
+  bool success = 2;
+  string error_message = 3;
+}
+
+// Request for node heartbeat
+message HeartbeatRequest {
+  string node_id = 1;
+  NodeStatus status = 2;
+}
+
+// Response to heartbeat
+message HeartbeatResponse {
+  bool acknowledged = 1;
+}
+
+// Request to get the current cluster topology
+message GetClusterTopologyRequest {}
+
+// Response containing the cluster topology
+message GetClusterTopologyResponse {
+  ClusterTopology topology = 1;
+}
+
+// Server info response message
+message ServerInfoResponse {
+  repeated string server_ids = 1;
+  map<string, string> server_statuses = 2;
+}
+
+// Process data request message
+message ProcessDataRequest {
+  bytes data = 1;
+}
+
+// Process data response message
+message ProcessDataResponse {
+  bytes processed_data = 1;
+}
+
+// Server status response message
+message ServerStatusResponse {
+  string status = 1;
+  int32 active_connections = 2;
+  double cpu_usage = 3;
+  double memory_usage = 4;
+}

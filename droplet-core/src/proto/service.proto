@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package droplet;
+
+import "proto/meta.proto";
+import "google/protobuf/empty.proto";
+
+// Meta Server Service
+service Meta {
+  // Heartbeat for server to report its status
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse) {}
+}
+
+// Server Service
+service Droplet {
+  // Heartbeat for server to report its status
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse) {}
+
+  // Process data
+  rpc ProcessData(ProcessDataRequest) returns (ProcessDataResponse) {}
+
+  // Get server status
+  rpc GetStatus(google.protobuf.Empty) returns (ServerStatusResponse) {}
+}

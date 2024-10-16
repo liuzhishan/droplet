@@ -193,6 +193,8 @@
 对于 `batch` 格式的问题，我们可以直接将数据存成 `batch` 的格式，这样在读取的时候就不需要进行转换操作，减少了转换操作带来的性能损耗。
 序列化和反序列化的时候则采用 `simd` 的方式来处理。这一格式已在另一个项目中实现，命名为 [gridbuffer](https://github.com/liuzhishan/gridbuffer)。
 
+从 `log server` 接收的数据以及之后各种环节处理的数据，都可以采用 `gridbuffer` 格式来存储。
+
 对于样本按行按列进行过滤的问题，`batch` 格式可以很方便的按行和按列进行 `mask` 操作, 同时不会存在 `malloc`、拷贝数据等性能开销。
 
 `simd` 加 `batch` 的方式相比 `protobuf`、`flatbuffer` 等通用格式在压缩与读写性能上都有明显的优势。

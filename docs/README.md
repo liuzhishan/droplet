@@ -11,7 +11,5 @@
     - [core](modules/core.md)
     - [meta server](modules/meta_server.md)
     - [sinker](modules/sinker.md)
-    - [writer](modules/writer.md)
-    - [reader](modules/reader.md)
     - [server](modules/server.md)
     - [client](modules/client.md)

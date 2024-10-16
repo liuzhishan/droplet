@@ -1,0 +1,40 @@
+[package]
+name = "droplet-core"
+version = "0.1.0"
+edition = "2021"
+
+[[test]]
+name = "test"
+path = "tests/tests.rs"
+
+[dependencies]
+log = "0.4"
+tonic = "0.12"
+tonic-types = "0.12"
+tokio = { version = "1.39", features = ["full"] }
+env_logger = "0.7"
+anyhow = "1.0"
+base64 = "0.22.1"
+clap = "4.5.13"
+rand = "0.8.5"
+num_cpus = "1.16"
+coarsetime = "0.1"
+likely_stable = "0.1"
+sync-unsafe-cell = "0.1.1"
+chrono = "0.4.38"
+bitpacking = "0.5"
+paste = "1.0"
+prost = "0.13.1"
+prost-types = "0.13.1"
+strum = { version = "0.26", features = ["derive"] }
+strum_macros = "0.26"
+gridbuffer = { path = "../../gridbuffer" }
+dashmap = "6.1.0"
+mysql = "25.0.1"
+serde = "1.0"
+toml = "0.8.19"
+gxhash = "3.4.1"
+local-ip-address = "0.6.2"
+
+[build-dependencies]
+tonic-build = "0.12"
