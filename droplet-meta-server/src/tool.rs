@@ -1,5 +1,5 @@
-use log::info;
 use anyhow::Result;
+use log::info;
 
 use local_ip_address::local_ip;
 

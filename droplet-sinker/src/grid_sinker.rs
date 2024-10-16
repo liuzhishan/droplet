@@ -17,13 +17,13 @@ use tokio_graceful_shutdown::SubsystemHandle;
 
 use gridbuffer::core::gridbuffer::GridBuffer;
 
-use droplet_core::grid_sample::GridSample;
 use droplet_core::grid_sample::GridRow;
+use droplet_core::grid_sample::GridSample;
 
+use droplet_core::db::db::DB;
+use droplet_core::id_mapping::IDMapping;
 use droplet_core::local_file_reader::{get_test_gridbuffer_filenames, LocalFileReader};
 use droplet_core::window_heap::WindowHeap;
-use droplet_core::id_mapping::IDMapping;
-use droplet_core::db::db::DB;
 
 /// `GridSinker` is responsible for sorting `gridbuffer` data and sending it to the target worker node.
 ///
@@ -67,7 +67,7 @@ impl<T: Iterator<Item = Result<String>>> GridSinker<T> {
     pub async fn run(mut self, subsys: SubsystemHandle) -> Result<()> {
         info!("GridSinker process started");
 
-        let gridbuffers= self.reader.filter_map(|line| match line {
+        let gridbuffers = self.reader.filter_map(|line| match line {
             Ok(line) => match GridBuffer::from_base64(&line) {
                 Ok(gridbuffer) => Some(gridbuffer),
                 Err(e) => {

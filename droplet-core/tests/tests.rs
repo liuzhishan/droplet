@@ -1,4 +1,9 @@
-use droplet_core::{db::{db::DB, feature::insert_sample_keys}, feature_info::FeatureConfig, local_file_reader::LocalFileReader, tool::setup_log};
+use droplet_core::{
+    db::{db::DB, feature::insert_sample_keys},
+    feature_info::FeatureConfig,
+    local_file_reader::LocalFileReader,
+    tool::setup_log,
+};
 
 use anyhow::Result;
 

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result, bail};
+use anyhow::{anyhow, bail, Result};
 use dashmap::DashMap;
 use likely_stable::{likely, unlikely};
 use log::{error, info};
@@ -15,7 +15,7 @@ use crate::window_heap::HeapOrderKey;
 /// For easy of use, the fields are fixed, and the global ids are fixed too. So
 /// we write them fixed in code. We first insert the fields into `id_mapping` table,
 /// and then get the ids from the table.
-/// 
+///
 /// Notice: for historical reason, the name of `request_id` is `llsid` in `SimpleFeatures` proto.
 #[derive(Eq)]
 pub struct SampleKey {
@@ -43,7 +43,7 @@ impl SampleKey {
     }
 
     /// For easy of use, the ids of sample keys are fixed.
-    /// 
+    ///
     /// Get directly from the `id_mapping` table.
     #[inline]
     pub fn get_sample_key_ids() -> &'static [u32] {
@@ -96,7 +96,7 @@ impl PartialOrd for SampleKey {
 }
 
 /// `GridRow` is a pointer to a row in a `GridBuffer`.
-/// 
+///
 /// It encapsulates a `GridRow` and provide `SampleKey` for easy access.
 pub struct GridRow {
     /// Reference to the `GridBuffer`.
@@ -140,7 +140,10 @@ impl PartialOrd for GridRow {
 impl GridRow {
     #[inline]
     pub fn new(gridbuffer_ptr: *const GridBuffer, row: usize) -> Self {
-        Self { gridbuffer_ptr, row }
+        Self {
+            gridbuffer_ptr,
+            row,
+        }
     }
 
     #[inline]
@@ -254,17 +257,23 @@ impl GridRows {
                 // Be careful, we must use `push_u64_values`, cannot use `push_cell`, because the data is in `u64_values` or `f32_values`,
                 // the `cell` just contains the index.
                 match row.get_cell(j) {
-                    Some(cell) => {
-                        match cell {
-                            GridCell::U64Cell(cell) => {
-                                gridbuffer.push_u64_values(i, j, row.get_gridbuffer().get_u64_values(row_index, j));
-                            }
-                            GridCell::F32Cell(cell) => {
-                                gridbuffer.push_f32_values(i, j, row.get_gridbuffer().get_f32_values(row_index, j));
-                            }
-                            _ => {}
+                    Some(cell) => match cell {
+                        GridCell::U64Cell(cell) => {
+                            gridbuffer.push_u64_values(
+                                i,
+                                j,
+                                row.get_gridbuffer().get_u64_values(row_index, j),
+                            );
                         }
-                    }
+                        GridCell::F32Cell(cell) => {
+                            gridbuffer.push_f32_values(
+                                i,
+                                j,
+                                row.get_gridbuffer().get_f32_values(row_index, j),
+                            );
+                        }
+                        _ => {}
+                    },
                     _ => {}
                 }
             }
@@ -295,7 +304,7 @@ pub struct GridSample {
 
 impl GridSample {
     /// Construct a new `GridSample` with the given keys.
-    /// 
+    ///
     /// The sample key ids are fixed and added as the first four columns automatically.
     pub fn new(num_rows: usize, cols: &Vec<u32>) -> Self {
         let all_cols = SampleKey::get_sample_key_ids()
@@ -310,7 +319,7 @@ impl GridSample {
     }
 
     /// Construct a new `GridSample` from a `GridBuffer`.
-    /// 
+    ///
     /// The first four columns of `gridbuffer` must be the sample key ids.
     pub fn from_gridbuffer(gridbuffer: GridBuffer) -> Result<Self> {
         if unlikely(!SampleKey::is_sample_key_ids(gridbuffer.col_ids())) {

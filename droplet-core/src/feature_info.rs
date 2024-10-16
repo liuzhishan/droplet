@@ -1,8 +1,8 @@
-use anyhow::{Result, bail};
-use serde::{Deserialize, Serialize};
-use strum::{EnumCount, EnumDiscriminants, EnumString, FromRepr, ToString};
+use anyhow::{bail, Result};
 use log::error;
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+use strum::{EnumCount, EnumDiscriminants, EnumString, FromRepr, ToString};
 
 use crate::db::{db::DB, feature::update_feature_infos};
 use crate::error_bail;
@@ -20,7 +20,7 @@ use crate::error_bail;
 /// So we use `Feature` to represent all data, just for the sake of consistency.
 ///
 /// `FeatureInfo` is used to describe the core information of a feature.
-#[derive(Default, Clone,Deserialize, Serialize)]
+#[derive(Default, Clone, Deserialize, Serialize)]
 pub struct FeatureInfo {
     /// Feature name.
     pub feature_name: String,
@@ -41,7 +41,7 @@ impl FeatureInfo {
     /// Parse from a string.
     ///
     /// If the line is comments, or invalid format, return an error.
-    /// 
+    ///
     /// Examples:
     ///
     /// feature_name = "ExtractSparse0", data_type = "U64"
@@ -155,13 +155,11 @@ impl FeatureConfig {
         let feature_infos: Vec<FeatureInfo> = content
             .split('\n')
             .filter(|line| !line.trim().is_empty() && !line.trim().starts_with('#'))
-            .filter_map(|line| {
-                match FeatureInfo::from_str(line) {
-                    Ok(feature_info) => Some(feature_info),
-                    Err(e) => {
-                        error!("Invalid feature config: {}, line: {}", e, line);
-                        None
-                    }
+            .filter_map(|line| match FeatureInfo::from_str(line) {
+                Ok(feature_info) => Some(feature_info),
+                Err(e) => {
+                    error!("Invalid feature config: {}, line: {}", e, line);
+                    None
                 }
             })
             .collect();

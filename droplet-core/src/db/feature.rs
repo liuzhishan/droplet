@@ -71,8 +71,7 @@ pub fn insert_sample_keys(db: &DB) -> Result<()> {
         )
         LIMIT 1
         "#,
-        keys
-            .iter()
+        keys.iter()
             .map(|name| params! { "name" => name.to_string() }),
     )?;
 

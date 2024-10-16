@@ -84,9 +84,7 @@ mod tests {
 
         let sql = "select name, id from id_mapping limit 10";
 
-        let result = conn.query_map(sql, |row: (String, u32)| {
-            (row.0, row.1)
-        })?;
+        let result = conn.query_map(sql, |row: (String, u32)| (row.0, row.1))?;
 
         for row in result {
             info!("row: {:?}", row);

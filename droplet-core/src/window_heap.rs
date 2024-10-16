@@ -210,10 +210,10 @@ impl WindowHeap {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::id_mapping::IDMapping;
     use crate::{grid_sample::SampleKey, tool::setup_log};
     use anyhow::Result;
-    use gridbuffer::core::{gridbuffer::GridBuffer};
-    use crate::id_mapping::IDMapping;
+    use gridbuffer::core::gridbuffer::GridBuffer;
 
     fn create_test_gridbuffer(num_rows: usize) -> Result<GridBuffer> {
         setup_log();
@@ -291,9 +291,7 @@ mod tests {
         assert_eq!(out_gb.num_rows(), 4);
 
         // Check if the output is in correct order
-        let timestamps: Vec<u64> = (0..4)
-            .filter_map(|i| out_gb.get_u64(i, 0))
-            .collect();
+        let timestamps: Vec<u64> = (0..4).filter_map(|i| out_gb.get_u64(i, 0)).collect();
         assert_eq!(timestamps, vec![0, 0, 0, 1]);
 
         info!("out gridbuffer bypes: {:?}", out_gb.estimated_bytes());

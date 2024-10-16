@@ -17,10 +17,9 @@ use tokio_graceful_shutdown::{SubsystemBuilder, Toplevel};
 use tonic::{transport::Server, Code, Request, Response, Status};
 use tonic_types::{ErrorDetails, StatusExt};
 
-use droplet_core::grpc_util::{send_bad_request_error, send_error_message};
 use droplet_core::droplet::{meta_server::Meta, HeartbeatRequest, HeartbeatResponse};
-pub struct MetaServerImpl {
-}
+use droplet_core::grpc_util::{send_bad_request_error, send_error_message};
+pub struct MetaServerImpl {}
 
 impl MetaServerImpl {
     pub fn new() -> Self {

@@ -2,8 +2,7 @@
 ///
 /// IDMapping use map string to u32 globally. It use auto increment method to generate the id.
 /// The result is storing into mysql database of meta server.
-
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use dashmap::DashMap;
 use mysql::prelude::Queryable;
 use mysql::{Pool, PooledConn};
@@ -117,9 +116,9 @@ impl IDMapping {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::db::DB;
     use crate::tool::setup_log;
     use log::info;
-    use crate::db::db::DB;
 
     #[test]
     fn test_get_id() -> Result<()> {
@@ -158,4 +157,3 @@ mod tests {
         Ok(())
     }
 }
-

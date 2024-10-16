@@ -7,8 +7,8 @@ use local_ip_address::local_ip;
 use std::net::TcpListener;
 use tonic::transport::Server;
 
-use droplet_core::tool::wait_for_signal;
 use droplet_core::droplet::meta_server::MetaServer;
+use droplet_core::tool::wait_for_signal;
 
 use droplet_core::tool::MESSAGE_LIMIT;
 use droplet_meta_server::tool::META_SERVER_PORT;
