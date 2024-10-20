@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 🚀 Features
+
+- Meta server v1 done
+
 ## [0.1.0] - 2024-10-16
 
 ### 🚀 Features
