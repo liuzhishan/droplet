@@ -2,52 +2,32 @@ syntax = "proto3";
 
 package droplet;
 
-import "google/protobuf/timestamp.proto";
-
-// Represents a node in the cluster
-message Node {
-  string id = 1;
-  string address = 2;
-  NodeStatus status = 3;
-  google.protobuf.Timestamp last_heartbeat = 4;
-}
-
 // Possible statuses for a node
 enum NodeStatus {
   UNKNOWN = 0;
-  HEALTHY = 1;
-  UNHEALTHY = 2;
-  OFFLINE = 3;
-}
-
-// Represents a shard of data
-message Shard {
-  string id = 1;
-  string node_id = 2;
-  uint64 size_bytes = 3;
-}
-
-// Represents the cluster topology
-message ClusterTopology {
-  repeated Node nodes = 1;
-  repeated Shard shards = 2;
+  ALIVE = 1;
+  HEALTHY = 2;
+  UNHEALTHY = 3;
+  OFFLINE = 4;
 }
 
 // Request to register a new node
 message RegisterNodeRequest {
-  string address = 1;
+  string node_name = 1;
+  string node_ip = 2;
+  uint32 node_port = 3;
 }
 
 // Response to node registration
 message RegisterNodeResponse {
-  string node_id = 1;
+  uint32 node_id = 1;
   bool success = 2;
   string error_message = 3;
 }
 
 // Request for node heartbeat
 message HeartbeatRequest {
-  string node_id = 1;
+  uint32 node_id = 1;
   NodeStatus status = 2;
 }
 
@@ -56,34 +36,86 @@ message HeartbeatResponse {
   bool acknowledged = 1;
 }
 
-// Request to get the current cluster topology
-message GetClusterTopologyRequest {}
-
-// Response containing the cluster topology
-message GetClusterTopologyResponse {
-  ClusterTopology topology = 1;
+message GetWorkerNodeIdRequest {
+    string node_name = 1;
 }
 
-// Server info response message
-message ServerInfoResponse {
-  repeated string server_ids = 1;
-  map<string, string> server_statuses = 2;
+message GetWorkerNodeIdResponse {
+    uint32 node_id = 1;
+    string error_message = 2;
 }
 
-// Process data request message
-message ProcessDataRequest {
-  bytes data = 1;
+message NodeInfo {
+    uint32 node_id = 1;
+    string node_name = 2;
+    string node_ip = 3;
+    uint32 node_port = 4;
+    NodeStatus status = 5;
 }
 
-// Process data response message
-message ProcessDataResponse {
-  bytes processed_data = 1;
+message GetWorkerNodeInfoRequest {
+    uint32 node_id = 1;
 }
 
-// Server status response message
-message ServerStatusResponse {
-  string status = 1;
-  int32 active_connections = 2;
-  double cpu_usage = 3;
-  double memory_usage = 4;
+message GetWorkerNodeInfoResponse {
+    string node_name = 1;
+    string node_ip = 2;
+    uint32 node_port = 3;
+}
+
+message ColumnInfo {
+    string column_name = 1;
+    string column_type = 2;
+    uint32 column_id = 3;
+    uint32 column_index = 4;
+}
+
+message InsertTableInfoRequest {
+    string table_name = 1;
+    uint32 partition_count_per_day = 2;
+    repeated ColumnInfo columns = 3;
+}
+
+message InsertTableInfoResponse {
+    bool success = 1;
+    string error_message = 2;
+}
+
+message GetTableInfoRequest {
+    string table_name = 1;
+}
+
+message GetTableInfoResponse {
+    repeated ColumnInfo columns = 1;
+    uint32 partition_count_per_day = 2;
+}
+
+message ReportStorageInfoRequest {
+    uint32 node_id = 1;
+    uint64 used_disk_size = 2;
+}
+
+message ReportStorageInfoResponse {
+    bool success= 1;
+}
+
+message GetPartitionInfoRequest {
+    string table_name = 1;
+    uint64 timestamp = 2;
+}
+
+message PartitionInfo {
+    uint32 partition_id = 1;
+    uint32 partition_date = 2;
+    uint32 partition_index = 3;
+    uint32 node_id = 4;
+    string node_name = 5;
+    string node_ip = 6;
+    uint32 node_port = 7;
+    uint64 time_start = 8;
+    uint64 time_end = 9;
+}
+
+message GetPartitionInfoResponse {
+    repeated PartitionInfo partition_infos = 1;
 }

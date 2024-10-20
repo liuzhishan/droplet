@@ -19,15 +19,19 @@ pub fn send_bad_request_error<T>(
     return Err(status);
 }
 
-/// Send error message of internal error for grpc request.
-pub fn send_error_message<T>(s: impl Into<String>) -> Result<Response<T>, Status> {
+/// Get error status from string message.
+pub fn get_error_status(s: impl Into<String>) -> Status {
     let s1: String = s.into();
 
     let mut err_details = ErrorDetails::new();
-
     let metadata: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     err_details.set_error_info("error", s1.clone(), metadata);
 
     let status = Status::with_error_details(Code::Internal, s1.clone(), err_details);
-    return Err(status);
+    status
+}
+
+/// Send error message of internal error for grpc request.
+pub fn send_error_message<T>(s: impl Into<String>) -> Result<Response<T>, Status> {
+    Err(get_error_status(s))
 }

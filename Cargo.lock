@@ -844,6 +844,7 @@ dependencies = [
  "likely_stable",
  "local-ip-address",
  "log",
+ "mysql",
  "num_cpus",
  "prost",
  "prost-types",

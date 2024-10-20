@@ -7,6 +7,9 @@ use local_ip_address::local_ip;
 use std::net::TcpListener;
 use tonic::transport::Server;
 
+use droplet_core::db::db::DB;
+use std::sync::Arc;
+
 use droplet_core::droplet::meta_server::MetaServer;
 use droplet_core::tool::wait_for_signal;
 
@@ -15,13 +18,16 @@ use droplet_meta_server::tool::META_SERVER_PORT;
 
 use droplet_meta_server::request_handler::MetaServerImpl;
 
-async fn serve() {
+async fn serve() -> Result<()> {
     let my_local_ip = local_ip().unwrap();
 
     let addr = format!("{}:{}", my_local_ip, META_SERVER_PORT)
         .parse()
         .unwrap();
-    let meta_server = MetaServerImpl::new();
+
+    let db = Arc::new(DB::new()?);
+
+    let meta_server = MetaServerImpl::new(db);
 
     let signal = wait_for_signal();
 
@@ -39,6 +45,8 @@ async fn serve() {
         .serve_with_shutdown(addr, signal)
         .await
         .unwrap();
+
+    Ok(())
 }
 
 fn main() -> Result<()> {
@@ -48,7 +56,7 @@ fn main() -> Result<()> {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(serve());
+        .block_on(serve())?;
 
     Ok(())
 }

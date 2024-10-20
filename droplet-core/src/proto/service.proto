@@ -3,22 +3,33 @@ syntax = "proto3";
 package droplet;
 
 import "proto/meta.proto";
-import "google/protobuf/empty.proto";
 
 // Meta Server Service
 service Meta {
-  // Heartbeat for server to report its status
+  // Heartbeat for server to report its status.
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse) {}
+
+  // Register a new node when it starts up.
+  rpc RegisterNode(RegisterNodeRequest) returns (RegisterNodeResponse) {}
+
+  // Get the node Id of the worker node.
+  rpc GetWorkerNodeId(GetWorkerNodeIdRequest) returns (GetWorkerNodeIdResponse) {}
+
+  // Insert the table info.
+  rpc InsertTableInfo(InsertTableInfoRequest) returns (InsertTableInfoResponse) {}
+
+  // Get the table info.
+  rpc GetTableInfo(GetTableInfoRequest) returns (GetTableInfoResponse) {}
+
+  // Report the storage info.
+  rpc ReportStorageInfo(ReportStorageInfoRequest) returns (ReportStorageInfoResponse) {}
+
+  // Get the partition info.
+  rpc GetPartitionInfo(GetPartitionInfoRequest) returns (GetPartitionInfoResponse) {}
 }
 
 // Server Service
 service Droplet {
   // Heartbeat for server to report its status
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse) {}
-
-  // Process data
-  rpc ProcessData(ProcessDataRequest) returns (ProcessDataResponse) {}
-
-  // Get server status
-  rpc GetStatus(google.protobuf.Empty) returns (ServerStatusResponse) {}
 }

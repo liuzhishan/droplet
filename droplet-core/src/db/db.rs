@@ -2,13 +2,16 @@
 use anyhow::{anyhow, bail, Result};
 use log::{error, info};
 
-use mysql::prelude::Queryable;
+use mysql::prelude::*;
 use mysql::*;
 
 #[derive(Clone)]
 pub struct DB {
     pool: Pool,
 }
+
+unsafe impl Send for DB {}
+unsafe impl Sync for DB {}
 
 impl DB {
     pub fn new() -> Result<Self> {

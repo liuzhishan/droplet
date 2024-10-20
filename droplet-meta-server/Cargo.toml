@@ -12,6 +12,7 @@ log = "0.4"
 env_logger = "0.7"
 anyhow = "1.0"
 chrono = "0.4.38"
+mysql = "25.0.1"
 clap = {  version = "4.5.13", features = [ "derive" ] }
 clap_derive = { version = "4.0.0-rc.1" }
 tokio = { version = "1.39", features = ["full"] }
