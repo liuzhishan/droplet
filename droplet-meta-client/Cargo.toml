@@ -1,18 +1,18 @@
 [package]
-name = "droplet-server"
+name = "droplet-meta-client"
 version = "0.0.1"
 authors = ["liuzhishan <liuzhishan01@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-description = "server for droplet."
+description = "meta client for droplet."
 
 [dependencies]
 log = "0.4"
 env_logger = "0.7"
 anyhow = "1.0"
 chrono = "0.4.38"
-dashmap = "6.1.0"
+mysql = "25.0.1"
 clap = {  version = "4.5.13", features = [ "derive" ] }
 clap_derive = { version = "4.0.0-rc.1" }
 tokio = { version = "1.39", features = ["full"] }
@@ -33,16 +33,10 @@ likely_stable = "0.1"
 coarsetime = "0.1"
 fnv = "1.0.3"
 sync-unsafe-cell = "0.1.1"
-mysql = "25.0.1"
 local-ip-address = "0.6.2"
-gethostname = "0.5.0"
 droplet-core = { path = "../droplet-core" }
 droplet-meta-server = { path = "../droplet-meta-server" }
 gridbuffer = { path = "../../gridbuffer" }
-
-[[bin]]
-name = "droplet-server"
-path = "src/bin/server.rs"
 
 [[test]]
 name = "test"

@@ -7,6 +7,10 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 description = "client for droplet."
 
+[[test]]
+name = "test"
+path = "tests/tests.rs"
+
 [dependencies]
 log = "0.4"
 env_logger = "0.7"
@@ -33,4 +37,7 @@ coarsetime = "0.1"
 fnv = "1.0.3"
 sync-unsafe-cell = "0.1.1"
 droplet-core = { path = "../droplet-core" }
+droplet-server = { path = "../droplet-server" }
+droplet-meta-server = { path = "../droplet-meta-server" }
+droplet-meta-client = { path = "../droplet-meta-client" }
 gridbuffer = { path = "../../gridbuffer" }

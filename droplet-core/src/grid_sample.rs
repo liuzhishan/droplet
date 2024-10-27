@@ -98,6 +98,7 @@ impl PartialOrd for SampleKey {
 /// `GridRow` is a pointer to a row in a `GridBuffer`.
 ///
 /// It encapsulates a `GridRow` and provide `SampleKey` for easy access.
+#[derive(Clone)]
 pub struct GridRow {
     /// Reference to the `GridBuffer`.
     gridbuffer_ptr: *const GridBuffer,

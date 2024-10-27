@@ -1,6 +1,6 @@
 use chrono::Duration;
 use chrono::Timelike;
-use chrono::{Datelike, NaiveDateTime};
+use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use log::{error, info};
 use mysql::params;
 use mysql::prelude::*;
@@ -13,6 +13,71 @@ use crate::droplet::NodeInfo;
 use crate::droplet::NodeStatus;
 use crate::droplet::PartitionInfo;
 use crate::error_bail;
+
+/// Get key id from `id_mapping` table.
+pub fn get_key_id(conn: &mut PooledConn, key_str: &str) -> Option<u32> {
+    match conn.query_first::<u32, _>(format!(
+        "SELECT key_id FROM id_mapping WHERE key_str = '{}'",
+        key_str.to_string()
+    )) {
+        Ok(key_id) => key_id,
+        Err(e) => {
+            error!(
+                "Failed to get key id from id_mapping, key_str: {}, error: {:?}",
+                key_str, e
+            );
+            None
+        }
+    }
+}
+
+pub fn get_key_ids(conn: &mut PooledConn, keys: &Vec<String>) -> Result<Vec<u32>> {
+    Ok(keys.iter().map(|k| get_or_insert_key_id(conn, k)).collect())
+}
+
+/// Insert key string into `id_mapping` table.
+pub fn insert_key_str(conn: &mut PooledConn, key_str: &str) -> Result<()> {
+    conn.exec_drop(
+        "INSERT INTO id_mapping (key_str) VALUES (:key_str)",
+        params! { "key_str" => key_str.to_string() },
+    )
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to insert key string into id_mapping, key_str: {}, error: {:?}",
+            key_str,
+            e
+        )
+    })
+}
+
+/// Get key id from `id_mapping` table.
+///
+/// If the key string does not exist, insert it into the table and return the new key id.
+pub fn get_or_insert_key_id(conn: &mut PooledConn, key_str: &str) -> u32 {
+    match get_key_id(conn, key_str) {
+        Some(key_id) => key_id,
+        None => {
+            match insert_key_str(conn, key_str) {
+                Ok(_) => match get_key_id(conn, key_str) {
+                    Some(key_id) => key_id,
+                    None => {
+                        // Unlikely to happen.
+                        error!("Failed to get key id after inserting, key_str: {}", key_str);
+                        0
+                    }
+                },
+                Err(e) => {
+                    // Unlikely to happen.
+                    error!(
+                        "Failed to insert key string into id_mapping, key_str: {}, error: {:?}",
+                        key_str, e
+                    );
+                    0
+                }
+            }
+        }
+    }
+}
 
 /// Register node info.
 ///
@@ -34,7 +99,7 @@ pub fn register_node(
     }
 
     conn.exec_drop(
-        "INSERT INTO worker_node_info (node_name, node_ip, node_port) VALUES (:node_name, :node_ip, :node_port)",
+        "INSERT INTO worker_node_info (node_name, node_ip, node_port, node_status) VALUES (:node_name, :node_ip, :node_port, 1)",
         params! {
             "node_name" => node_name,
             "node_ip" => node_ip,
@@ -193,6 +258,8 @@ pub fn get_partition_infos(
         partition_date,
         partition_index,
         available_node.node_id,
+        &time_start,
+        &time_end,
     )?;
 
     let partition_info = PartitionInfo {
@@ -274,16 +341,20 @@ pub fn insert_partition_info(
     partition_date: u32,
     partition_index: u32,
     node_id: u32,
+    time_start: &NaiveDateTime,
+    time_end: &NaiveDateTime,
 ) -> Result<u32> {
     conn.exec_drop(
         "INSERT INTO
-            partition_info (table_name, partition_date, partition_index, node_id)
-        VALUES (:table_name, :partition_date, :partition_index, :node_id)",
+            partition_info (table_name, partition_date, partition_index, node_id, time_start, time_end)
+        VALUES (:table_name, :partition_date, :partition_index, :node_id, :time_start, :time_end)",
         params! {
             "table_name" => table_name.to_string(),
             "partition_date" => partition_date,
             "partition_index" => partition_index,
             "node_id" => node_id,
+            "time_start" => time_start.format("%Y-%m-%d %H:%M:%S").to_string(),
+            "time_end" => time_end.format("%Y-%m-%d %H:%M:%S").to_string(),
         },
     )?;
 
@@ -302,4 +373,67 @@ pub fn insert_partition_info(
             error_bail!("Failed to get partition id");
         }
     }
+}
+
+/// Get partition paths for a table.
+pub fn get_table_paths_by_time(
+    conn: &mut PooledConn,
+    table: &str,
+    time_start: &NaiveDateTime,
+    time_end: &NaiveDateTime,
+) -> Result<Vec<String>> {
+    let partition_count_per_day = get_partition_count_per_day(conn, table)?;
+
+    let partition_indexes = conn.query_map(
+        format!(
+            "SELECT
+                t.partition_index,
+                p.partition_date
+            FROM table_info t
+            JOIN partition_info p ON t.table_name = p.table_name
+            WHERE t.table_name = '{}'
+                AND p.time_start <= '{}'
+                AND p.time_end >= '{}'
+            ",
+            table.to_string(),
+            time_start.format("%Y-%m-%d %H:%M:%S").to_string(),
+            time_end.format("%Y-%m-%d %H:%M:%S").to_string(),
+        ),
+        |row: (u32, u32)| (row.0, row.1),
+    )?;
+
+    let partition_paths = partition_indexes
+        .iter()
+        .map(|(index, partition_date)| {
+            format!("/tmp/droplet/tables/{}/{}/{}", table, partition_date, index)
+        })
+        .collect();
+
+    Ok(partition_paths)
+}
+
+/// Parse a date from a u32 integer in the format YYYYMMDD
+fn parse_date_from_u32(p_date: u32) -> Result<NaiveDate> {
+    let year = (p_date / 10000) as i32;
+    let month = ((p_date % 10000) / 100) as u32;
+    let day = (p_date % 100) as u32;
+
+    NaiveDate::from_ymd_opt(year, month, day)
+        .ok_or_else(|| anyhow::anyhow!("Invalid date: {}", p_date))
+}
+
+pub fn get_table_paths_by_date(
+    conn: &mut PooledConn,
+    table: &str,
+    partition_date: u32,
+) -> Result<Vec<String>> {
+    let partition_count_per_day = get_partition_count_per_day(conn, table)?;
+    let partition_indexes = (0..partition_count_per_day).collect::<Vec<u32>>();
+
+    let partition_paths = partition_indexes
+        .iter()
+        .map(|index| format!("/tmp/droplet/tables/{}/{}/{}", table, partition_date, index))
+        .collect();
+
+    Ok(partition_paths)
 }

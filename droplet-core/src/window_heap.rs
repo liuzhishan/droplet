@@ -16,6 +16,36 @@ pub trait HeapOrderKey {
     fn key(&self) -> Self::Key;
 }
 
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
+pub struct WindowHeapItem {
+    /// The row of the element in gridbuffer.
+    pub gridrow: GridRow,
+
+    /// The index of the element in the `elements` of window heap.
+    pub index: usize,
+
+    /// The index of the reader used in merge sort. Other situations are 0.
+    pub reader_index: usize,
+}
+
+impl WindowHeapItem {
+    pub fn new(gridrow: GridRow, index: usize) -> Self {
+        Self {
+            gridrow,
+            index,
+            reader_index: 0,
+        }
+    }
+
+    pub fn with_reader_index(gridrow: GridRow, index: usize, reader_index: usize) -> Self {
+        Self {
+            gridrow,
+            index,
+            reader_index,
+        }
+    }
+}
+
 /// A min-heap to maintain the top `window_size` elements.
 ///
 /// To achieve better performance, we need to avoid `malloc` and `copy` as much as possible.
@@ -37,7 +67,7 @@ pub struct WindowHeap {
     heap_size: usize,
 
     /// The heap to maintain the top `GridRows`s.
-    heap: BinaryHeap<Reverse<(GridRow, usize)>>,
+    heap: BinaryHeap<Reverse<WindowHeapItem>>,
 
     /// A stack to maintain the available positions in the `elements` `Vec`.
     available_positions: Vec<usize>,
@@ -65,6 +95,9 @@ pub struct WindowHeap {
     /// they may construct multiple output `GridBuffer`s. So we need use `Vec` to store them.
     out_gridbuffers: Vec<GridBuffer>,
 
+    /// The reader index of each output `GridBuffer`.
+    out_reader_indexes: Vec<usize>,
+
     /// For constructing new `GridBuffer`.
     gridrows: GridRows,
 
@@ -88,6 +121,7 @@ impl WindowHeap {
             batch_size,
             num_rows_left: vec![0; window_size],
             out_gridbuffers: Vec::with_capacity(20),
+            out_reader_indexes: Vec::with_capacity(20),
             gridrows: GridRows::new(),
             col_ids: Vec::new(),
             col_ids_hash: 0,
@@ -115,6 +149,14 @@ impl WindowHeap {
     /// One easy way is to check length of `out_gridbuffers`. If the length is greater than `0`, we pop
     /// all the outputs. This could be done outside of the window heap.
     pub fn push(&mut self, gridbuffer: GridBuffer) -> Result<()> {
+        self.push_with_reader_index(gridbuffer, 0)
+    }
+
+    pub fn push_with_reader_index(
+        &mut self,
+        gridbuffer: GridBuffer,
+        reader_index: usize,
+    ) -> Result<()> {
         if self.col_ids.is_empty() {
             self.col_ids = gridbuffer.col_ids().clone();
             self.col_ids_hash = gridbuffer.col_ids_hash();
@@ -148,39 +190,71 @@ impl WindowHeap {
 
                 for i in 0..self.elements[index].num_rows() {
                     let row = GridRow::new(&self.elements[index], i);
-                    self.heap.push(Reverse((row, index)));
+                    let item = WindowHeapItem::with_reader_index(row, index, reader_index);
+
+                    self.heap.push(Reverse(item));
                 }
 
                 Ok(())
             }
             None => {
                 // The `elements` is full, we need to pop some `GridRow`s to make space for the new `GridBuffer`.
-                while let Some(Reverse((gridrow, index))) = self.heap.pop() {
-                    self.gridrows.push(gridrow);
+                while let Some(Reverse(item)) = self.heap.pop() {
+                    let index = item.index;
+                    let find_position = self.pop_rows_for_position(item);
 
-                    // Must convert to `GridBuffer` before drop the element, because the `GridRow` contains the
-                    // pointer of `GridBuffer`.
-                    if self.gridrows.len() >= self.batch_size {
-                        self.out_gridbuffers.push(self.gridrows.to_gridbuffer());
-                        self.gridrows.clear();
-                    }
+                    if find_position {
+                        if self.num_rows_left[index] == 0 {
+                            self.elements[index] = gridbuffer;
+                            self.available_positions.push(index);
+                        }
 
-                    // For safety, unlikely to happen.
-                    if unlikely(self.num_rows_left[index] == 0) {
-                        self.elements[index] = gridbuffer;
-                        self.num_rows_left[index] = self.elements[index].num_rows();
-                        break;
-                    }
-
-                    self.num_rows_left[index] -= 1;
-                    if self.num_rows_left[index] == 0 {
-                        self.elements[index] = gridbuffer;
-                        self.num_rows_left[index] = self.elements[index].num_rows();
                         break;
                     }
                 }
 
                 Ok(())
+            }
+        }
+    }
+
+    /// Pop rows from the heap until there are available positions.
+    fn pop_rows_for_position(&mut self, item: WindowHeapItem) -> bool {
+        self.gridrows.push(item.gridrow);
+
+        let index = item.index;
+
+        // Must convert to `GridBuffer` before drop the element, because the `GridRow` contains the
+        // pointer of `GridBuffer`.
+        if self.gridrows.len() >= self.batch_size {
+            // For simplicity, we use the last reader index of item as the next reader to be used.
+            self.out_reader_indexes.push(item.reader_index);
+
+            self.out_gridbuffers.push(self.gridrows.to_gridbuffer());
+            self.gridrows.clear();
+        }
+
+        // For safety, unlikely to happen.
+        if unlikely(self.num_rows_left[index] == 0) {
+            self.num_rows_left[index] = self.elements[index].num_rows();
+            return true;
+        }
+
+        self.num_rows_left[index] -= 1;
+        if self.num_rows_left[index] == 0 {
+            self.num_rows_left[index] = self.elements[index].num_rows();
+            return true;
+        }
+
+        false
+    }
+
+    pub fn process_remain_data(&mut self) {
+        while let Some(Reverse(item)) = self.heap.pop() {
+            let find_position = self.pop_rows_for_position(item);
+
+            if find_position {
+                break;
             }
         }
     }
@@ -191,6 +265,14 @@ impl WindowHeap {
 
     pub fn out_gridbuffers(&self) -> &[GridBuffer] {
         &self.out_gridbuffers
+    }
+
+    pub fn get_out_reader_index(&mut self) -> Option<usize> {
+        self.out_reader_indexes.pop()
+    }
+
+    pub fn out_reader_indexes(&self) -> &[usize] {
+        &self.out_reader_indexes
     }
 
     pub fn len(&self) -> usize {

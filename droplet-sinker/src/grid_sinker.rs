@@ -63,7 +63,7 @@ impl<T: Iterator<Item = Result<String>>> GridSinker<T> {
         }
     }
 
-    /// Start the GridSinker process
+    /// Start the GridSinker process.
     pub async fn run(mut self, subsys: SubsystemHandle) -> Result<()> {
         info!("GridSinker process started");
 

@@ -32,4 +32,13 @@ service Meta {
 service Droplet {
   // Heartbeat for server to report its status
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse) {}
+
+  // Start sink partition.
+  rpc StartSinkPartition(StartSinkPartitionRequest) returns (StartSinkPartitionResponse) {}
+
+  // Sink the `GridSample` to worker node.
+  rpc SinkGridSample(SinkGridSampleRequest) returns (SinkGridSampleResponse) {}
+
+  // Finish sink partition.
+  rpc FinishSinkPartition(FinishSinkPartitionRequest) returns (FinishSinkPartitionResponse) {}
 }

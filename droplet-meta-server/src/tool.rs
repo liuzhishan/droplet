@@ -22,7 +22,7 @@ pub async fn get_meta_server_default_client() -> Result<MetaClient<tonic::transp
 }
 
 pub async fn get_meta_server_client(
-    meta_server_endpoint: String,
+    meta_server_endpoint: &String,
 ) -> Result<MetaClient<tonic::transport::Channel>> {
     match MetaClient::connect(format!("http://{}", meta_server_endpoint)).await {
         Ok(client) => Ok(client

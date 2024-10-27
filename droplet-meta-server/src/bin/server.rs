@@ -19,7 +19,7 @@ use droplet_meta_server::tool::META_SERVER_PORT;
 use droplet_meta_server::request_handler::MetaServerImpl;
 
 async fn serve() -> Result<()> {
-    let my_local_ip = local_ip().unwrap();
+    let my_local_ip = local_ip()?;
 
     let addr = format!("{}:{}", my_local_ip, META_SERVER_PORT)
         .parse()

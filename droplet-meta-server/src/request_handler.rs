@@ -34,7 +34,8 @@ use droplet_core::db::meta_info::{
     get_partition_count_per_day, get_table_column_infos, get_worker_node_id, register_node,
     update_storage_info,
 };
-use droplet_core::grpc_util::get_error_status;
+use droplet_core::grpc_util::{get_db_conn, get_error_status};
+use droplet_core::print_and_send_error_status;
 
 pub struct MetaServerImpl {
     /// Db for meta server.
@@ -46,12 +47,14 @@ impl MetaServerImpl {
         Self { db }
     }
 
-    #[inline]
-    pub fn get_db_conn(&self) -> Result<PooledConn, Status> {
+    /// Get db connection.
+    ///
+    /// For more clear log, define as method of MetaServerImpl.
+    fn get_db_conn(&self) -> Result<PooledConn, Status> {
         match self.db.get_conn() {
             Ok(conn) => Ok(conn),
             Err(e) => Err(get_error_status(format!(
-                "Failed to get db connection: {}",
+                "Failed to get db connection for meta server: {}",
                 e
             ))),
         }
@@ -88,7 +91,9 @@ impl Meta for MetaServerImpl {
             req.node_ip.as_str(),
             req.node_port,
         )
-        .map_err(|e| get_error_status(format!("Failed to register node: {:?}", e)))?;
+        .map_err(|e| {
+            print_and_send_error_status!("Failed to register node: {}", e);
+        })?;
 
         let response = RegisterNodeResponse {
             node_id,
@@ -107,8 +112,9 @@ impl Meta for MetaServerImpl {
 
         let mut conn = self.get_db_conn()?;
 
-        let node_id = get_worker_node_id(&mut conn, req.node_name.as_str())
-            .map_err(|e| get_error_status(format!("Failed to get worker node id: {:?}", e)))?;
+        let node_id = get_worker_node_id(&mut conn, req.node_name.as_str()).map_err(|e| {
+            print_and_send_error_status!("Failed to get worker node id: {}", e);
+        })?;
 
         let response = GetWorkerNodeIdResponse {
             node_id,
@@ -132,7 +138,9 @@ impl Meta for MetaServerImpl {
             req.partition_count_per_day,
             req.columns,
         )
-        .map_err(|e| get_error_status(format!("Failed to insert table info: {:?}", e)))?;
+        .map_err(|e| {
+            print_and_send_error_status!("Failed to insert table info: {}", e);
+        })?;
 
         let response = InsertTableInfoResponse {
             success: true,
@@ -150,12 +158,13 @@ impl Meta for MetaServerImpl {
 
         let mut conn = self.get_db_conn()?;
 
-        let columns = get_table_column_infos(&mut conn, req.table_name.as_str())
-            .map_err(|e| get_error_status(format!("Failed to get table columns: {:?}", e)))?;
+        let columns = get_table_column_infos(&mut conn, req.table_name.as_str()).map_err(|e| {
+            print_and_send_error_status!("Failed to get table columns: {}", e);
+        })?;
 
         let partition_count_per_day =
             get_partition_count_per_day(&mut conn, req.table_name.as_str()).map_err(|e| {
-                get_error_status(format!("Failed to get partition count per day: {:?}", e))
+                print_and_send_error_status!("Failed to get partition count per day: {}", e);
             })?;
 
         let response = GetTableInfoResponse {
@@ -174,8 +183,9 @@ impl Meta for MetaServerImpl {
 
         let mut conn = self.get_db_conn()?;
 
-        update_storage_info(&mut conn, req.node_id, req.used_disk_size)
-            .map_err(|e| get_error_status(format!("Failed to update storage info: {:?}", e)))?;
+        update_storage_info(&mut conn, req.node_id, req.used_disk_size).map_err(|e| {
+            print_and_send_error_status!("Failed to update storage info: {}", e);
+        })?;
 
         let response = ReportStorageInfoResponse { success: true };
 
@@ -191,8 +201,11 @@ impl Meta for MetaServerImpl {
         let mut conn = self.get_db_conn()?;
 
         let partition_infos =
-            get_partition_infos(&mut conn, req.table_name.as_str(), req.timestamp)
-                .map_err(|e| get_error_status(format!("Failed to get partition info: {:?}", e)))?;
+            get_partition_infos(&mut conn, req.table_name.as_str(), req.timestamp).map_err(
+                |e| {
+                    print_and_send_error_status!("Failed to get partition info: {}", e);
+                },
+            )?;
 
         let response = GetPartitionInfoResponse { partition_infos };
 

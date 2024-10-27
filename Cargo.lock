@@ -771,6 +771,9 @@ dependencies = [
  "clap_derive",
  "coarsetime",
  "droplet-core",
+ "droplet-meta-client",
+ "droplet-meta-server",
+ "droplet-server",
  "env_logger",
  "fnv",
  "gridbuffer",
@@ -803,6 +806,7 @@ dependencies = [
  "coarsetime",
  "dashmap",
  "env_logger",
+ "gethostname",
  "gridbuffer",
  "gxhash",
  "likely_stable",
@@ -823,6 +827,41 @@ dependencies = [
  "tonic",
  "tonic-build",
  "tonic-types",
+]
+
+[[package]]
+name = "droplet-meta-client"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "async-channel",
+ "base64 0.22.1",
+ "chrono",
+ "clap",
+ "clap_derive",
+ "coarsetime",
+ "droplet-core",
+ "droplet-meta-server",
+ "env_logger",
+ "fnv",
+ "gridbuffer",
+ "hashbrown 0.11.2",
+ "likely_stable",
+ "local-ip-address",
+ "log",
+ "mysql",
+ "num_cpus",
+ "prost",
+ "prost-types",
+ "rand",
+ "strum",
+ "strum_macros",
+ "sync-unsafe-cell",
+ "tokio",
+ "tokio-graceful-shutdown",
+ "tonic",
+ "tonic-types",
+ "tracing",
 ]
 
 [[package]]
@@ -870,13 +909,18 @@ dependencies = [
  "clap",
  "clap_derive",
  "coarsetime",
+ "dashmap",
  "droplet-core",
+ "droplet-meta-server",
  "env_logger",
  "fnv",
+ "gethostname",
  "gridbuffer",
  "hashbrown 0.11.2",
  "likely_stable",
+ "local-ip-address",
  "log",
+ "mysql",
  "num_cpus",
  "prost",
  "prost-types",
@@ -1147,6 +1191,16 @@ checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
+]
+
+[[package]]
+name = "gethostname"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc3655aa6818d65bc620d6911f05aa7b6aeb596291e1e9f79e52df85583d1e30"
+dependencies = [
+ "rustix",
+ "windows-targets",
 ]
 
 [[package]]

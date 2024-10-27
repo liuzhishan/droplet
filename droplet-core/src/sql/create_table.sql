@@ -51,5 +51,7 @@ CREATE TABLE partition_info (
     partition_date INT NOT NULL COMMENT 'partition date, format: YYYYMMDD',
     partition_index INT NOT NULL COMMENT 'partition index',
     node_id INT NOT NULL COMMENT 'node id',
+    time_start TIMESTAMP NOT NULL COMMENT 'time start',
+    time_end TIMESTAMP NOT NULL COMMENT 'time end',
     UNIQUE KEY (table_name, partition_date, partition_index)
 );
