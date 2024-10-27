@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.1.2] - 2024-10-27
+
+### 🚀 Features
+
+- Add client and merge on read
+
+## [0.1.1] - 2024-10-20
 
 ### 🚀 Features
 
