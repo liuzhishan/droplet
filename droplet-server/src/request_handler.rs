@@ -11,8 +11,8 @@ use tonic::{Request, Response, Status};
 
 use droplet_core::droplet::droplet_server::Droplet;
 use droplet_core::droplet::{
-    FinishSinkPartitionRequest, FinishSinkPartitionResponse, HeartbeatRequest,
-    HeartbeatResponse, SinkGridSampleRequest, SinkGridSampleResponse, StartSinkPartitionRequest,
+    FinishSinkPartitionRequest, FinishSinkPartitionResponse, HeartbeatRequest, HeartbeatResponse,
+    SinkGridSampleRequest, SinkGridSampleResponse, StartSinkPartitionRequest,
     StartSinkPartitionResponse,
 };
 

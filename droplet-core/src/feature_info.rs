@@ -2,7 +2,7 @@ use anyhow::{bail, Result};
 use log::error;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use strum::{EnumCount, EnumDiscriminants, EnumString, FromRepr, Display};
+use strum::{Display, EnumCount, EnumDiscriminants, EnumString, FromRepr};
 
 use crate::db::{db::DB, feature::update_feature_infos};
 use crate::error_bail;
@@ -96,8 +96,8 @@ impl FeatureInfo {
     EnumString,
     Deserialize,
     Serialize,
+    Display,
 )]
-#[derive(Display)]
 #[repr(u8)]
 pub enum DataType {
     /// `u64`

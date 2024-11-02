@@ -9,9 +9,8 @@ use tonic::{Request, Response, Status};
 
 use droplet_core::droplet::meta_server::Meta;
 use droplet_core::droplet::{
-    GetPartitionInfoRequest, GetPartitionInfoResponse, GetTableInfoRequest,
-    GetTableInfoResponse, GetWorkerNodeIdRequest, GetWorkerNodeIdResponse,
-    HeartbeatRequest, HeartbeatResponse,
+    GetPartitionInfoRequest, GetPartitionInfoResponse, GetTableInfoRequest, GetTableInfoResponse,
+    GetWorkerNodeIdRequest, GetWorkerNodeIdResponse, HeartbeatRequest, HeartbeatResponse,
     InsertTableInfoRequest, InsertTableInfoResponse, RegisterNodeRequest, RegisterNodeResponse,
     ReportStorageInfoRequest, ReportStorageInfoResponse,
 };

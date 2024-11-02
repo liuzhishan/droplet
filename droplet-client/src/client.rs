@@ -13,9 +13,7 @@ use std::sync::Arc;
 use droplet_core::db::db::DB;
 use gridbuffer::core::gridbuffer::GridBuffer;
 
-use crate::gridbuffer_reader::{
-    GridRowRef, LocalGridRowMergeReader, LocalGridRowReader,
-};
+use crate::gridbuffer_reader::{GridRowRef, LocalGridRowMergeReader, LocalGridRowReader};
 
 use droplet_core::droplet::FinishSinkPartitionRequest;
 use droplet_meta_client::client::MetaClientWrapper;

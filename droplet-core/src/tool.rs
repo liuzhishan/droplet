@@ -3,8 +3,8 @@ use anyhow::bail;
 use likely_stable::unlikely;
 
 use log::{error, info};
-use std::{io::Write, sync::Once};
 use std::simd::Simd;
+use std::{io::Write, sync::Once};
 
 use tokio::signal::unix::{signal, SignalKind};
 

@@ -2,13 +2,13 @@ use anyhow::Result;
 use log::info;
 
 use local_ip_address::local_ip;
-use tonic::transport::Server;
 use std::sync::Arc;
+use tonic::transport::Server;
 
 use droplet_core::db::db::DB;
-use droplet_core::tool::wait_for_signal;
-use droplet_core::tool::init_log;
 use droplet_core::droplet::droplet_server::DropletServer;
+use droplet_core::tool::init_log;
+use droplet_core::tool::wait_for_signal;
 use droplet_core::tool::MESSAGE_LIMIT;
 use droplet_server::request_handler::DropletServerImpl;
 use droplet_server::tool::register_node_to_meta_server;
