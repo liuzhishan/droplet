@@ -1,37 +1,24 @@
-use std::borrow::BorrowMut;
 use std::time::Duration;
 
 use dashmap::DashMap;
 
-use anyhow::{bail, Result};
-use droplet_core::print_and_send_error_status;
-use log::{error, info};
-use prost::bytes::Bytes;
-use std::cell::RefCell;
-use sync_unsafe_cell::SyncUnsafeCell;
-use tracing::instrument::WithSubscriber;
+use anyhow::Result;
+use log::error;
 
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc};
 
-use mysql::prelude::*;
-use mysql::*;
-
-use prost_types::Any;
-use tokio_graceful_shutdown::{SubsystemBuilder, Toplevel};
-use tonic::{transport::Server, Code, Request, Response, Status};
-use tonic_types::{ErrorDetails, StatusExt};
+use tonic::{Request, Response, Status};
 
 use droplet_core::droplet::droplet_server::Droplet;
 use droplet_core::droplet::{
-    ColumnInfo, FinishSinkPartitionRequest, FinishSinkPartitionResponse, HeartbeatRequest,
+    FinishSinkPartitionRequest, FinishSinkPartitionResponse, HeartbeatRequest,
     HeartbeatResponse, SinkGridSampleRequest, SinkGridSampleResponse, StartSinkPartitionRequest,
     StartSinkPartitionResponse,
 };
 
 use droplet_core::db::db::DB;
 use droplet_core::db::meta_info::get_or_insert_key_id;
-use droplet_core::grpc_util::{get_error_status, send_error_message};
+use droplet_core::grpc_util::send_error_message;
 
 use crate::sample_saver::SampleSaver;
 
@@ -68,7 +55,7 @@ impl DropletServerImpl {
 impl Droplet for DropletServerImpl {
     async fn heartbeat(
         &self,
-        request: Request<HeartbeatRequest>,
+        _request: Request<HeartbeatRequest>,
     ) -> Result<Response<HeartbeatResponse>, Status> {
         Ok(Response::new(HeartbeatResponse { acknowledged: true }))
     }

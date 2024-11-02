@@ -5,7 +5,7 @@
 use anyhow::{bail, Result};
 use dashmap::DashMap;
 use mysql::prelude::Queryable;
-use mysql::{Pool, PooledConn};
+use mysql::PooledConn;
 
 use log::error;
 

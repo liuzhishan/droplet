@@ -1,28 +1,17 @@
-use std::borrow::BorrowMut;
-use std::time::Duration;
-
-use anyhow::{bail, Result};
+use anyhow::Result;
 use log::{error, info};
-use std::cell::RefCell;
-use sync_unsafe_cell::SyncUnsafeCell;
-use tracing::instrument::WithSubscriber;
 
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc};
 
-use mysql::prelude::*;
 use mysql::*;
 
-use prost_types::Any;
-use tokio_graceful_shutdown::{SubsystemBuilder, Toplevel};
-use tonic::{transport::Server, Code, Request, Response, Status};
-use tonic_types::{ErrorDetails, StatusExt};
+use tonic::{Request, Response, Status};
 
 use droplet_core::droplet::meta_server::Meta;
 use droplet_core::droplet::{
-    ColumnInfo, GetPartitionInfoRequest, GetPartitionInfoResponse, GetTableInfoRequest,
+    GetPartitionInfoRequest, GetPartitionInfoResponse, GetTableInfoRequest,
     GetTableInfoResponse, GetWorkerNodeIdRequest, GetWorkerNodeIdResponse,
-    GetWorkerNodeInfoRequest, GetWorkerNodeInfoResponse, HeartbeatRequest, HeartbeatResponse,
+    HeartbeatRequest, HeartbeatResponse,
     InsertTableInfoRequest, InsertTableInfoResponse, RegisterNodeRequest, RegisterNodeResponse,
     ReportStorageInfoRequest, ReportStorageInfoResponse,
 };
@@ -34,7 +23,7 @@ use droplet_core::db::meta_info::{
     get_partition_count_per_day, get_table_column_infos, get_worker_node_id, register_node,
     update_storage_info,
 };
-use droplet_core::grpc_util::{get_db_conn, get_error_status};
+use droplet_core::grpc_util::get_error_status;
 use droplet_core::print_and_send_error_status;
 
 pub struct MetaServerImpl {
@@ -65,7 +54,7 @@ impl MetaServerImpl {
 impl Meta for MetaServerImpl {
     async fn heartbeat(
         &self,
-        request: Request<HeartbeatRequest>,
+        _request: Request<HeartbeatRequest>,
     ) -> Result<Response<HeartbeatResponse>, Status> {
         info!("heartbeat");
 

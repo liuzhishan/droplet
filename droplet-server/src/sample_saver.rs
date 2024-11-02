@@ -1,8 +1,7 @@
 use anyhow::{anyhow, bail, Result};
-use async_channel::Sender;
 use dashmap::DashMap;
 use droplet_core::{droplet::SinkGridSampleRequest, window_heap::WindowHeap};
-use likely_stable::{likely, unlikely};
+use likely_stable::unlikely;
 use log::{error, info};
 use std::fs::File;
 use tokio_graceful_shutdown::{SubsystemBuilder, SubsystemHandle, Toplevel};
@@ -19,7 +18,6 @@ use sync_unsafe_cell::SyncUnsafeCell;
 use gridbuffer::core::gridbuffer::GridBuffer;
 
 use droplet_core::error_bail;
-use droplet_core::grid_sample::GridSample;
 
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 enum WorkerState {
@@ -114,7 +112,7 @@ impl SampleSaver {
 
         let path_sorted = path.replace("droplet", "droplet_sorted").to_string();
 
-        std::fs::create_dir_all(path.clone())?;
+        std::fs::create_dir_all(path)?;
         std::fs::create_dir_all(path_sorted.clone())?;
 
         Ok(Self {
@@ -136,7 +134,7 @@ impl SampleSaver {
     fn start_worker(
         receiver: async_channel::Receiver<SinkGridSampleRequest>,
         filenames: &Vec<String>,
-        path: &str,
+        _path: &str,
         path_id: u32,
         worker_infos: &Vec<Arc<SyncUnsafeCell<WorkerInfo>>>,
     ) {
@@ -158,7 +156,7 @@ impl SampleSaver {
             );
 
             tokio::spawn(async move {
-                Toplevel::new(|s| async move {
+                let _ = Toplevel::new(|s| async move {
                     s.start(SubsystemBuilder::new(worker_name, |s| async move {
                         worker.run(s).await
                     }));
@@ -250,7 +248,7 @@ impl SampleSaver {
         }
 
         let mut readers = Vec::with_capacity(self.worker_num as usize);
-        for (i, filename) in self.filenames.iter().enumerate() {
+        for (_i, filename) in self.filenames.iter().enumerate() {
             let file = File::open(filename)?;
             readers.push(BufReader::new(file));
         }
@@ -262,7 +260,7 @@ impl SampleSaver {
 
         let mut is_full = false;
         // Read lines until window heap is full.
-        for i in 0..self.window_size {
+        for _i in 0..self.window_size {
             if is_full {
                 break;
             }
@@ -295,7 +293,7 @@ impl SampleSaver {
                             }
                         }
                     }
-                    Err(err) => {
+                    Err(_err) => {
                         count_done += 1;
 
                         if count_done == readers.len() {
@@ -435,7 +433,7 @@ impl SampleSaverWorker {
     }
 
     fn set_worker_state(&self, state: WorkerState) {
-        let mut worker_info = unsafe { &mut *self.worker_info.get() };
+        let worker_info = unsafe { &mut *self.worker_info.get() };
         worker_info.worker_state = state;
     }
 
@@ -466,7 +464,7 @@ impl SampleSaverWorker {
                                     file.write_all(gridbuffer.to_base64().as_bytes())?;
                                     file.write_all(b"\n")?;
 
-                                    let mut worker_info = unsafe { &mut *self.worker_info.get() };
+                                    let worker_info = unsafe { &mut *self.worker_info.get() };
                                     worker_info.total += 1;
                                 }
                             }
@@ -493,7 +491,7 @@ impl SampleSaverWorker {
                 file.write_all(gridbuffer.to_base64().as_bytes())?;
                 file.write_all(b"\n")?;
 
-                let mut worker_info = unsafe { &mut *self.worker_info.get() };
+                let worker_info = unsafe { &mut *self.worker_info.get() };
                 worker_info.total += 1;
             }
         }

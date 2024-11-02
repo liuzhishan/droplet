@@ -1,20 +1,15 @@
 use anyhow::Result;
 use gridbuffer::core::performance::parse_simple_features;
 use log::{error, info};
-use std::io::BufRead;
 use std::time::Duration;
-use tokio::sync::mpsc;
 use tokio_graceful_shutdown::SubsystemBuilder;
 use tokio_graceful_shutdown::Toplevel;
 
-use std::fs::File;
-use std::io::BufReader;
 use tokio::task;
 
 use tokio_graceful_shutdown::SubsystemHandle;
 
 use gridbuffer::core::feature_batcher::SimpleFeaturesBatcher;
-use gridbuffer::core::gridbuffer::GridBuffer;
 
 use droplet_core::local_file_reader::{get_test_feature_filenames, LocalFileReader};
 
@@ -41,7 +36,7 @@ impl<T: Iterator<Item = Result<String>>> FeatureSinker<T> {
     }
 
     /// Start the FeatureSinker process
-    pub async fn run(self, subsys: SubsystemHandle) -> Result<()> {
+    pub async fn run(self, _subsys: SubsystemHandle) -> Result<()> {
         info!("Starting FeatureSinker process");
 
         let features = self.reader.filter_map(|line| match line {
@@ -75,7 +70,7 @@ impl<T: Iterator<Item = Result<String>>> FeatureSinker<T> {
     }
 
     /// Process and send data to the appropriate worker node.
-    fn process_and_send_data(self, data: String) -> Result<()> {
+    fn process_and_send_data(self, _data: String) -> Result<()> {
         // TODO: Implement the main logic for processing and sending data
         Ok(())
     }
@@ -112,7 +107,7 @@ impl<T: Iterator<Item = Result<String>>> FeatureSinker<T> {
         }
 
         for handler in handlers {
-            handler.await?;
+            let _ = handler.await?;
         }
 
         Ok(())

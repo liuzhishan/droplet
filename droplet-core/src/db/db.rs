@@ -1,8 +1,6 @@
 /// `mysql` database operations.
-use anyhow::{anyhow, bail, Result};
-use log::{error, info};
+use anyhow::Result;
 
-use mysql::prelude::*;
 use mysql::*;
 
 #[derive(Clone)]

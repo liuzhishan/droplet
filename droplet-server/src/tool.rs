@@ -6,9 +6,7 @@ use local_ip_address::local_ip;
 
 use log::{error, info};
 
-use droplet_core::droplet::meta_client::MetaClient;
 use droplet_core::droplet::RegisterNodeRequest;
-use droplet_core::droplet::RegisterNodeResponse;
 use droplet_core::error_bail;
 use droplet_meta_server::tool::get_meta_server_default_client;
 

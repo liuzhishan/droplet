@@ -1,7 +1,8 @@
 use chrono::Duration;
 use chrono::Timelike;
-use chrono::{Datelike, NaiveDate, NaiveDateTime};
-use log::{error, info};
+use chrono::{DateTime, Utc};
+use chrono::{NaiveDate, NaiveDateTime};
+use log::error;
 use mysql::params;
 use mysql::prelude::*;
 use mysql::PooledConn;
@@ -9,7 +10,6 @@ use mysql::PooledConn;
 use anyhow::{bail, Result};
 
 use crate::droplet::ColumnInfo;
-use crate::droplet::DataType;
 use crate::droplet::NodeInfo;
 use crate::droplet::NodeStatus;
 use crate::droplet::PartitionInfo;
@@ -236,7 +236,7 @@ pub fn get_partition_infos(
 ) -> Result<Vec<PartitionInfo>> {
     let partition_count_per_day = get_partition_count_per_day(conn, table_name)?;
 
-    let naive_datetime = NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
+    let naive_datetime = DateTime::from_timestamp(timestamp as i64, 0)
         .ok_or_else(|| anyhow::anyhow!(format!("Invalid timestamp: {}", timestamp)))?;
     let seconds_in_day = naive_datetime.num_seconds_from_midnight();
     let partition_index = (seconds_in_day as u32 * partition_count_per_day / 86400) as u32;
@@ -282,7 +282,7 @@ pub fn get_partition_infos(
 ///
 /// We use sql to select the node, order by `update_at` desc and `disk_usage_ratio` asc.
 /// Accoding this rule we can select the node with the least disk usage.
-pub fn get_available_node(conn: &mut PooledConn, midnight: NaiveDateTime) -> Result<NodeInfo> {
+pub fn get_available_node(conn: &mut PooledConn, midnight: DateTime<Utc>) -> Result<NodeInfo> {
     let node_usage = conn.query_first::<(u32, String, String, u32, f64), _>(format!(
         "SELECT
             node_id,
@@ -342,8 +342,8 @@ pub fn insert_partition_info(
     partition_date: u32,
     partition_index: u32,
     node_id: u32,
-    time_start: &NaiveDateTime,
-    time_end: &NaiveDateTime,
+    time_start: &DateTime<Utc>,
+    time_end: &DateTime<Utc>,
 ) -> Result<u32> {
     conn.exec_drop(
         "INSERT INTO
@@ -383,7 +383,7 @@ pub fn get_table_paths_by_time(
     time_start: &NaiveDateTime,
     time_end: &NaiveDateTime,
 ) -> Result<Vec<String>> {
-    let partition_count_per_day = get_partition_count_per_day(conn, table)?;
+    let _partition_count_per_day = get_partition_count_per_day(conn, table)?;
 
     let partition_indexes = conn.query_map(
         format!(

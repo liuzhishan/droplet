@@ -1,9 +1,8 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use gridbuffer::error_bail;
-use log::{error, info};
+use log::error;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
-use std::iter;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 pub struct LocalFileReader {
@@ -46,7 +45,7 @@ impl LocalFileReader {
         // Open next file
         match self.open_next_file() {
             Ok(_) => self.next(),
-            Err(e) => None,
+            Err(_) => None,
         }
     }
 }

@@ -1,10 +1,9 @@
-use anyhow::{anyhow, bail, Result};
-use dashmap::DashMap;
-use likely_stable::{likely, unlikely};
-use log::{error, info};
+use anyhow::{bail, Result};
+use likely_stable::unlikely;
+use log::error;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
 
-use gridbuffer::core::gridbuffer::{GridBuffer, GridCell, GridCellU64};
+use gridbuffer::core::gridbuffer::{GridBuffer, GridCell};
 
 use crate::error_bail;
 use crate::tool::is_keys_equal;
@@ -259,14 +258,14 @@ impl GridRows {
                 // the `cell` just contains the index.
                 match row.get_cell(j) {
                     Some(cell) => match cell {
-                        GridCell::U64Cell(cell) => {
+                        GridCell::U64Cell(_cell) => {
                             gridbuffer.push_u64_values(
                                 i,
                                 j,
                                 row.get_gridbuffer().get_u64_values(row_index, j),
                             );
                         }
-                        GridCell::F32Cell(cell) => {
+                        GridCell::F32Cell(_cell) => {
                             gridbuffer.push_f32_values(
                                 i,
                                 j,

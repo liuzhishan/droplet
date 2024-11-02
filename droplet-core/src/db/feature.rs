@@ -1,6 +1,6 @@
 /// Feature related operations.
 use anyhow::{bail, Result};
-use log::{error, info};
+use log::error;
 
 use mysql::prelude::Queryable;
 
@@ -24,7 +24,7 @@ pub fn update_feature_infos(db: &DB, feature_infos: &[FeatureInfo]) -> Result<()
             feature_info.feature_name.clone()
         ))?;
 
-        if let Some((name, data_type)) = info {
+        if let Some((_name, data_type)) = info {
             if data_type != feature_info.data_type.clone() as u32 {
                 error_bail!(
                     "data type mismatch for feature: {}, data type in db: {}, data type in config: {}",

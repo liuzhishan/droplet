@@ -72,5 +72,7 @@
 //!
 //! Then we have a global ordered dataset, with clear partition.
 
+#![allow(dead_code)]
+
 pub mod feature_sinker;
 pub mod grid_sinker;

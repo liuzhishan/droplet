@@ -1,11 +1,10 @@
-#![feature(portable_simd)]
-use std::arch::x86_64::*;
-use std::simd::prelude::*;
+#![allow(unused)]
+use anyhow::bail;
+use likely_stable::unlikely;
 
-use anyhow::{bail, Result};
-use likely_stable::{likely, unlikely};
 use log::{error, info};
 use std::{io::Write, sync::Once};
+use std::simd::Simd;
 
 use tokio::signal::unix::{signal, SignalKind};
 

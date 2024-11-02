@@ -1,17 +1,13 @@
-use anyhow::{anyhow, Result};
-use droplet_core::tool::init_log;
-use log::error;
+use anyhow::Result;
 use log::info;
 
 use local_ip_address::local_ip;
-use std::net::TcpListener;
 use tonic::transport::Server;
-
-use droplet_core::db::db::DB;
 use std::sync::Arc;
 
+use droplet_core::db::db::DB;
 use droplet_core::tool::wait_for_signal;
-
+use droplet_core::tool::init_log;
 use droplet_core::droplet::droplet_server::DropletServer;
 use droplet_core::tool::MESSAGE_LIMIT;
 use droplet_server::request_handler::DropletServerImpl;

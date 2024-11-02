@@ -1,6 +1,5 @@
+#![allow(dead_code)]
 #![feature(portable_simd)]
-use std::arch::x86_64::*;
-use std::simd::prelude::*;
 
 pub mod db;
 pub mod droplet;

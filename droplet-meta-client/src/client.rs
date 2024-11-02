@@ -1,7 +1,6 @@
 use anyhow::Result;
 use droplet_core::droplet::ColumnInfo;
 use gethostname::gethostname;
-use log::info;
 
 use std::sync::Arc;
 
@@ -14,7 +13,6 @@ use droplet_core::db::meta_info::{
 };
 
 use droplet_core::droplet::meta_client::MetaClient;
-use droplet_meta_server::tool::META_SERVER_PORT;
 use droplet_meta_server::tool::{get_meta_server_client, get_meta_server_default_client};
 use droplet_server::tool::DROPPLET_SERVER_PORT;
 

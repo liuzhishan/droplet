@@ -2,7 +2,7 @@ use anyhow::{bail, Result};
 use log::error;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use strum::{EnumCount, EnumDiscriminants, EnumString, FromRepr, ToString};
+use strum::{EnumCount, EnumDiscriminants, EnumString, FromRepr, Display};
 
 use crate::db::{db::DB, feature::update_feature_infos};
 use crate::error_bail;
@@ -61,7 +61,7 @@ impl FeatureInfo {
             let kv = part.split('=').map(|s| s.trim()).collect::<Vec<_>>();
 
             if kv.len() != 2 {
-                error_bail!("Invalid feature info str: {}", part.clone());
+                error_bail!("Invalid feature info str: {}", part);
             }
 
             if kv[0] == "feature_name" {
@@ -70,7 +70,7 @@ impl FeatureInfo {
                 let data_type = match DataType::from_str(kv[1]) {
                     Ok(data_type) => data_type,
                     Err(e) => {
-                        error_bail!("Invalid data type: {}, part: {}", e, part.clone());
+                        error_bail!("Invalid data type: {}, part: {}", e, part);
                     }
                 };
 
@@ -94,10 +94,10 @@ impl FeatureInfo {
     EnumCount,
     EnumDiscriminants,
     EnumString,
-    ToString,
     Deserialize,
     Serialize,
 )]
+#[derive(Display)]
 #[repr(u8)]
 pub enum DataType {
     /// `u64`

@@ -7,17 +7,16 @@ use droplet_server::tool::{get_droplet_client, get_droplet_default_client};
 use std::iter::Iterator;
 
 use droplet_core::error_bail;
-use log::{error, info};
+use log::error;
 use std::sync::Arc;
 
 use droplet_core::db::db::DB;
 use gridbuffer::core::gridbuffer::GridBuffer;
 
 use crate::gridbuffer_reader::{
-    GridRowRef, GridRowRefs, LocalGridRowMergeReader, LocalGridRowReader,
+    GridRowRef, LocalGridRowMergeReader, LocalGridRowReader,
 };
 
-use super::gridbuffer_reader::{LocalGridBufferMergeReader, LocalGridbufferReader};
 use droplet_core::droplet::FinishSinkPartitionRequest;
 use droplet_meta_client::client::MetaClientWrapper;
 

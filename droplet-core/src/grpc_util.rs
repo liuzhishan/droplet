@@ -1,7 +1,5 @@
-use log::error;
 use mysql::PooledConn;
-use prost::{Message, Name};
-use tonic::{transport::Server, Code, Request, Response, Status};
+use tonic::{Code, Response, Status};
 use tonic_types::{ErrorDetails, StatusExt};
 
 use crate::db::db::DB;

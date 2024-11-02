@@ -1,9 +1,9 @@
 use anyhow::bail;
 use anyhow::Result;
-use chrono::NaiveDateTime;
+use chrono::DateTime;
 use chrono::Timelike;
 use gethostname::gethostname;
-use log::{error, info};
+use log::error;
 use std::time::Duration;
 use tokio::task;
 use tokio_graceful_shutdown::SubsystemBuilder;
@@ -17,12 +17,10 @@ use tokio_graceful_shutdown::SubsystemHandle;
 use gridbuffer::core::gridbuffer::GridBuffer;
 
 use droplet_core::grid_sample::GridRow;
-use droplet_core::grid_sample::GridSample;
 
 use likely_stable::likely;
 
 use droplet_client::client::Client;
-use droplet_core::db::db::DB;
 use droplet_core::error_bail;
 use droplet_core::id_mapping::IDMapping;
 use droplet_core::local_file_reader::{get_test_gridbuffer_filenames, LocalFileReader};
@@ -111,7 +109,7 @@ impl<T: Iterator<Item = Result<String>>> GridSinker<T> {
         let row = GridRow::new(gridbuffer, 0);
         let timestamp = row.get_sample_key().timestamp;
 
-        let naive_datetime = NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
+        let naive_datetime = DateTime::from_timestamp(timestamp as i64, 0)
             .ok_or_else(|| anyhow::anyhow!(format!("Invalid timestamp: {}", timestamp)))?;
         let seconds_in_day = naive_datetime.num_seconds_from_midnight();
 
@@ -134,7 +132,7 @@ impl<T: Iterator<Item = Result<String>>> GridSinker<T> {
     }
 
     /// Start the GridSinker process.
-    pub async fn run(mut self, subsys: SubsystemHandle) -> Result<()> {
+    pub async fn run(mut self, _subsys: SubsystemHandle) -> Result<()> {
         let mut gridbuffers = self.reader.filter_map(|line| match line {
             Ok(line) => match GridBuffer::from_base64(&line) {
                 Ok(gridbuffer) => Some(gridbuffer),
@@ -278,7 +276,7 @@ impl<T: Iterator<Item = Result<String>>> GridSinker<T> {
 
             let reader = LocalFileReader::new(&chunk_files)?;
 
-            let mut meta_client = MetaClientWrapper::get_default_client().await?;
+            let meta_client = MetaClientWrapper::get_default_client().await?;
             let sinker = GridSinker::new(table_name, reader, id_mapping.clone(), meta_client)?;
 
             let handler = task::spawn(async move {
@@ -294,7 +292,7 @@ impl<T: Iterator<Item = Result<String>>> GridSinker<T> {
         }
 
         for handler in handlers {
-            handler.await?;
+            let _ = handler.await?;
         }
 
         Ok(())

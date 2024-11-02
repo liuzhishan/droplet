@@ -7,7 +7,7 @@ use droplet_core::{
     grid_sample::{GridRow, SampleKey},
 };
 use gridbuffer::core::gridbuffer::GridBuffer;
-use log::{error, info};
+use log::error;
 
 pub struct LocalGridbufferReader {
     /// Paths to local gridbuffer files.
@@ -277,13 +277,11 @@ impl GridCellRef {
     }
 
     pub fn get_sample_key(&self) -> Option<SampleKey> {
-        unsafe {
-            if self.gridbuffer.is_null() {
-                None
-            } else {
-                let row = GridRow::new(self.gridbuffer, self.row_index);
-                Some(row.get_sample_key())
-            }
+        if self.gridbuffer.is_null() {
+            None
+        } else {
+            let row = GridRow::new(self.gridbuffer, self.row_index);
+            Some(row.get_sample_key())
         }
     }
 }
@@ -367,7 +365,7 @@ impl Iterator for LocalGridRowMergeReader {
 
         let mut cells = Vec::with_capacity(self.0.total_key_ids);
 
-        let mut primary_key = None;
+        let mut _primary_key = None;
 
         match self.0.readers[0].next() {
             Some(row) => {
@@ -376,7 +374,7 @@ impl Iterator for LocalGridRowMergeReader {
                     return None;
                 } else {
                     if row.cells[0].is_valid() {
-                        primary_key = row.cells[0].get_sample_key();
+                        _primary_key = row.cells[0].get_sample_key();
                         cells.extend(row.cells);
                     } else {
                         error!("The first row has no inner row!");
@@ -399,7 +397,7 @@ impl Iterator for LocalGridRowMergeReader {
                 if row.cells[0].is_valid() {
                     let cur_key = row.cells[0].get_sample_key();
 
-                    match (cur_key.as_ref(), primary_key.as_ref()) {
+                    match (cur_key.as_ref(), _primary_key.as_ref()) {
                         (Some(key), Some(primary_key)) => {
                             if *key > *primary_key {
                                 break;
@@ -418,7 +416,7 @@ impl Iterator for LocalGridRowMergeReader {
             }
 
             if !has_value {
-                for j in 0..self.0.key_ids[i].len() {
+                for _j in 0..self.0.key_ids[i].len() {
                     cells.push(GridCellRef::default());
                 }
             }

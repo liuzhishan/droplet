@@ -1,13 +1,12 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use gridbuffer::core::gridbuffer::GridBuffer;
 use likely_stable::unlikely;
-use log::{error, info};
+use log::error;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
 use crate::error_bail;
 use crate::grid_sample::{GridRow, GridRows};
-use crate::tool::is_keys_equal;
 
 /// The key type to compare the elements.
 pub trait HeapOrderKey {

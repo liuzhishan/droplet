@@ -1,10 +1,8 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use droplet_core::tool::init_log;
-use log::error;
 use log::info;
 
 use local_ip_address::local_ip;
-use std::net::TcpListener;
 use tonic::transport::Server;
 
 use droplet_core::db::db::DB;
