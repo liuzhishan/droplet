@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
+- Fix warning
+
+## [0.1.2] - 2024-11-02
+
+### 🚀 Features
+
 - Add client and merge on read
 - Test sinker and merge sort
 
