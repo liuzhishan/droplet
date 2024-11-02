@@ -38,7 +38,7 @@ CREATE TABLE column_info (
     id INT AUTO_INCREMENT PRIMARY KEY,
     table_name VARCHAR(255) NOT NULL COMMENT 'table name',
     column_name VARCHAR(255) NOT NULL COMMENT 'column name',
-    column_type VARCHAR(255) NOT NULL COMMENT 'column type',
+    column_type INT NOT NULL COMMENT 'column type',
     column_index INT NOT NULL COMMENT 'column index',
     column_id INT NOT NULL COMMENT 'global unique id for column according to id_mapping',
     column_comment VARCHAR(255) NOT NULL COMMENT 'column comment',

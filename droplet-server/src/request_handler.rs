@@ -82,7 +82,23 @@ impl Droplet for DropletServerImpl {
         match self.sample_savers.get(&req.path_id) {
             Some(saver) => saver.start_partition(req.sinker_id),
             None => {
-                let saver = SampleSaver::new(req.path.as_str(), req.path_id, req.partition_index);
+                let saver =
+                    match SampleSaver::new(req.path.as_str(), req.path_id, req.partition_index) {
+                        Ok(saver) => saver,
+                        Err(e) => {
+                            error!(
+                                "Create sample saver failed, path: {}, error: {}",
+                                req.path.clone(),
+                                e
+                            );
+                            return send_error_message::<StartSinkPartitionResponse>(format!(
+                                "Create sample saver failed, path: {}, error: {}",
+                                req.path.clone(),
+                                e
+                            ));
+                        }
+                    };
+
                 saver.start_partition(req.sinker_id);
 
                 self.sample_savers.insert(req.path_id, saver);
@@ -133,14 +149,16 @@ impl Droplet for DropletServerImpl {
     ) -> Result<Response<FinishSinkPartitionResponse>, Status> {
         let req = request.into_inner();
 
+        let mut is_done = false;
+
         match self.sample_savers.get(&req.path_id) {
             Some(saver) => {
                 saver.finish_partition(req.sinker_id);
 
                 if saver.is_sinkers_done() {
+                    saver.close_sender();
                     // Wait the workers done.
                     while !saver.is_workers_done() {
-                        info!("Waiting workers, sleep 3 seconds, path: {}", saver.path());
                         tokio::time::sleep(Duration::from_secs(3)).await;
                     }
 
@@ -156,7 +174,7 @@ impl Droplet for DropletServerImpl {
                         }
                     }
 
-                    self.sample_savers.remove(&req.path_id);
+                    is_done = true;
                 }
             }
             None => {
@@ -166,6 +184,10 @@ impl Droplet for DropletServerImpl {
                     req.path_id
                 ));
             }
+        }
+
+        if is_done {
+            self.sample_savers.remove(&req.path_id);
         }
 
         Ok(Response::new(FinishSinkPartitionResponse { success: true }))

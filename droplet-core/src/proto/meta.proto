@@ -4,11 +4,31 @@ package droplet;
 
 // Possible statuses for a node
 enum NodeStatus {
-  UNKNOWN = 0;
-  ALIVE = 1;
-  HEALTHY = 2;
-  UNHEALTHY = 3;
-  OFFLINE = 4;
+  Unknown = 0;
+  Alive = 1;
+  Healthy = 2;
+  Unhealthy = 3;
+  Offline = 4;
+}
+
+enum DataType {
+    None = 0;
+    I32 = 1;
+    I64 = 2;
+    UI32 = 3;
+    UI64 = 4;
+    F32 = 5;
+    F64 = 6;
+    String = 7;
+    Bool = 8;
+    I32Array = 9;
+    I64Array = 10;
+    UI32Array = 11;
+    UI64Array = 12;
+    F32Array = 13;
+    F64Array = 14;
+    StringArray = 15;
+    BoolArray = 16;
 }
 
 // Request to register a new node
@@ -65,7 +85,7 @@ message GetWorkerNodeInfoResponse {
 
 message ColumnInfo {
     string column_name = 1;
-    string column_type = 2;
+    DataType column_type = 2;
     uint32 column_id = 3;
     uint32 column_index = 4;
 }

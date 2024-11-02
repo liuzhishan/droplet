@@ -1,5 +1,8 @@
 use anyhow::{bail, Result};
-use droplet_core::droplet::droplet_client::DropletClient;
+use droplet_core::droplet::{
+    droplet_client::DropletClient, HeartbeatRequest, NodeStatus, SinkGridSampleRequest,
+    StartSinkPartitionRequest,
+};
 use droplet_server::tool::{get_droplet_client, get_droplet_default_client};
 use std::iter::Iterator;
 
@@ -15,6 +18,7 @@ use crate::gridbuffer_reader::{
 };
 
 use super::gridbuffer_reader::{LocalGridBufferMergeReader, LocalGridbufferReader};
+use droplet_core::droplet::FinishSinkPartitionRequest;
 use droplet_meta_client::client::MetaClientWrapper;
 
 /// Wrapper of grpc droplet client.
@@ -53,6 +57,16 @@ impl Client {
                 );
             }
         }
+    }
+
+    pub async fn new_client_by_server_endpoint(server_endpoint: &str) -> Result<Self> {
+        let droplet_client = get_droplet_client(server_endpoint).await?;
+        let meta_client = MetaClientWrapper::get_default_client().await?;
+
+        Ok(Self {
+            droplet_client,
+            meta_client,
+        })
     }
 
     pub async fn get_default_client() -> Result<Self> {
@@ -118,5 +132,76 @@ impl Client {
         }
 
         Ok(LocalGridRowMergeReader::new(readers, key_ids))
+    }
+
+    pub async fn start_sink_partition(
+        &mut self,
+        table: &str,
+        sinker_id: u32,
+        partition_index: u32,
+    ) -> Result<()> {
+        let path = self.meta_client.get_path_by_table(&table);
+        let path_id = self.meta_client.get_or_insert_key_id(path.as_str())?;
+
+        self.droplet_client
+            .start_sink_partition(StartSinkPartitionRequest {
+                path,
+                path_id,
+                sinker_id,
+                partition_index,
+            })
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn sink_grid_sample(
+        &mut self,
+        table: &str,
+        path_id: Option<u32>,
+        sinker_id: u32,
+        partition_index: u32,
+        gridbuffer: GridBuffer,
+    ) -> Result<()> {
+        let new_path_id = path_id.unwrap_or(self.meta_client.get_or_insert_key_id(table)?);
+
+        self.droplet_client
+            .sink_grid_sample(SinkGridSampleRequest {
+                path_id: new_path_id,
+                sinker_id,
+                partition_index,
+                grid_sample_bytes: gridbuffer.to_bytes(),
+            })
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn finish_sink_partition(
+        &mut self,
+        path_id: u32,
+        sinker_id: u32,
+        partition_index: u32,
+    ) -> Result<()> {
+        self.droplet_client
+            .finish_sink_partition(FinishSinkPartitionRequest {
+                path_id,
+                sinker_id,
+                partition_index,
+            })
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn heartbeat(&mut self, node_id: u32) -> Result<()> {
+        self.droplet_client
+            .heartbeat(HeartbeatRequest {
+                node_id,
+                status: NodeStatus::Alive.into(),
+            })
+            .await?;
+
+        Ok(())
     }
 }

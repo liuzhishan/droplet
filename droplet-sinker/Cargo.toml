@@ -35,6 +35,10 @@ strum_macros = "0.26"
 likely_stable = "0.1"
 coarsetime = "0.1"
 fnv = "1.0.3"
+gethostname = "0.5.0"
 sync-unsafe-cell = "0.1.1"
 droplet-core = { path = "../droplet-core" }
 gridbuffer = { path = "../../gridbuffer" }
+droplet-meta-client = { path = "../droplet-meta-client" }
+droplet-server = { path = "../droplet-server" }
+droplet-client = { path = "../droplet-client" }

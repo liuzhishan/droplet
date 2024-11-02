@@ -3,8 +3,9 @@ use log::info;
 
 use droplet_meta_server::tool::get_meta_server_default_client;
 
+use droplet_core::droplet::ColumnInfo;
 use droplet_core::{
-    droplet::{HeartbeatRequest, HeartbeatResponse, NodeStatus},
+    droplet::{DataType, HeartbeatRequest, HeartbeatResponse, NodeStatus},
     tool::setup_log,
 };
 
@@ -15,7 +16,7 @@ async fn test_meta_server_heartbeat() -> Result<()> {
     let mut meta_client = get_meta_server_default_client().await?;
 
     let request = HeartbeatRequest {
-        node_id: "test_node".to_string(),
+        node_id: 0,
         status: NodeStatus::Healthy.into(),
     };
 

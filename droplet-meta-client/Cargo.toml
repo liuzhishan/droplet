@@ -31,11 +31,13 @@ strum = { version = "0.26", features = ["derive"] }
 strum_macros = "0.26"
 likely_stable = "0.1"
 coarsetime = "0.1"
+gethostname = "0.5.0"
 fnv = "1.0.3"
 sync-unsafe-cell = "0.1.1"
 local-ip-address = "0.6.2"
 droplet-core = { path = "../droplet-core" }
 droplet-meta-server = { path = "../droplet-meta-server" }
+droplet-server = { path = "../droplet-server" }
 gridbuffer = { path = "../../gridbuffer" }
 
 [[test]]

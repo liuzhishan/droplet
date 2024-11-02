@@ -63,9 +63,9 @@ pub async fn get_droplet_default_client() -> Result<DropletClient<tonic::transpo
 }
 
 pub async fn get_droplet_client(
-    droplet_server_endpoint: &String,
+    droplet_server_endpoint: &str,
 ) -> Result<DropletClient<tonic::transport::Channel>> {
-    match DropletClient::connect(format!("http://{}", droplet_server_endpoint.clone())).await {
+    match DropletClient::connect(format!("http://{}", droplet_server_endpoint.to_string())).await {
         Ok(client) => Ok(client
             .max_decoding_message_size(MESSAGE_LIMIT)
             .max_encoding_message_size(MESSAGE_LIMIT)),

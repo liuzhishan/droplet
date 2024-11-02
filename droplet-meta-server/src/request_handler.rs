@@ -136,7 +136,7 @@ impl Meta for MetaServerImpl {
             &mut conn,
             req.table_name.as_str(),
             req.partition_count_per_day,
-            req.columns,
+            &req.columns,
         )
         .map_err(|e| {
             print_and_send_error_status!("Failed to insert table info: {}", e);

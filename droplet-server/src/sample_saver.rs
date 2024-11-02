@@ -95,7 +95,7 @@ pub struct SampleSaver {
 }
 
 impl SampleSaver {
-    pub fn new(path: &str, path_id: u32, partition_index: u32) -> Self {
+    pub fn new(path: &str, path_id: u32, partition_index: u32) -> Result<Self> {
         let (sender, receiver) = async_channel::bounded::<SinkGridSampleRequest>(256);
 
         let worker_num = 8;
@@ -114,7 +114,10 @@ impl SampleSaver {
 
         let path_sorted = path.replace("droplet", "droplet_sorted").to_string();
 
-        Self {
+        std::fs::create_dir_all(path.clone())?;
+        std::fs::create_dir_all(path_sorted.clone())?;
+
+        Ok(Self {
             path: path.to_string(),
             path_id,
             partition_index,
@@ -125,9 +128,9 @@ impl SampleSaver {
             worker_num: worker_num as u32,
             worker_infos,
             path_sorted,
-            batch_size: 256,
+            batch_size: 4,
             window_size: 256,
-        }
+        })
     }
 
     fn start_worker(
@@ -177,6 +180,10 @@ impl SampleSaver {
 
     pub fn finish_partition(&self, sinker_id: u32) {
         self.sinker_ids.remove(&sinker_id);
+    }
+
+    pub fn close_sender(&self) {
+        self.sender.close();
     }
 
     pub fn is_sinkers_done(&self) -> bool {
@@ -271,7 +278,8 @@ impl SampleSaver {
                         }
                     }
                     Ok(_) => {
-                        let gridbuffer = GridBuffer::from_base64(&line)?;
+                        let line = line.trim_end();
+                        let gridbuffer = GridBuffer::from_base64(line)?;
 
                         last_reader_index = j;
 
@@ -314,7 +322,8 @@ impl SampleSaver {
                     last_reader_index = (last_reader_index + 1) % readers.len();
                 }
                 Ok(_) => {
-                    let gridbuffer = GridBuffer::from_base64(&line)?;
+                    let line = line.trim_end();
+                    let gridbuffer = GridBuffer::from_base64(line)?;
 
                     window_heap.push(gridbuffer)?;
 
@@ -328,6 +337,7 @@ impl SampleSaver {
                     )?;
                 }
                 Err(err) => {
+                    count_done += 1;
                     info!("read line from reader done, error: {}", err);
                 }
             }
@@ -358,18 +368,11 @@ impl SampleSaver {
     ) -> Result<()> {
         if window_heap.out_gridbuffers().len() > 0 {
             while let Some(gridbuffer) = window_heap.get_out_gridbuffer() {
-                info!("Get out gridbuffer, size: {}", gridbuffer.estimated_bytes());
-
                 file.write_all(gridbuffer.to_base64().as_bytes())?;
                 file.write_all(b"\n")?;
 
                 *count_write_line += 1;
                 if *count_write_line >= lines_per_file {
-                    info!(
-                        "write lines to one file done, count: {}, filename: {}/{}.grid",
-                        count_write_line, self.path_sorted, cur_file_index
-                    );
-
                     *cur_file_index += 1;
                     *file = File::create(
                         format!("{}/{}.grid", self.path_sorted, cur_file_index).as_str(),
@@ -418,7 +421,7 @@ impl SampleSaverWorker {
         worker_info: Arc<SyncUnsafeCell<WorkerInfo>>,
     ) -> Self {
         let window_size = 256;
-        let batch_size = 256;
+        let batch_size = 4;
 
         Self {
             filename: filename.to_string(),
@@ -448,15 +451,17 @@ impl SampleSaverWorker {
                 req = self.receiver.recv() => {
                     match req {
                         Ok(req) => {
-                            info!("receive a request");
-
                             let gridbuffer = GridBuffer::from_bytes(&req.grid_sample_bytes)?;
 
                             self.window_heap.push(gridbuffer)?;
 
                             if self.window_heap.out_gridbuffers().len() > 0 {
                                 while let Some(gridbuffer) = self.window_heap.get_out_gridbuffer() {
-                                    info!("Get out gridbuffer, size: {}", gridbuffer.estimated_bytes());
+                                    info!(
+                                        "Get out gridbuffer, size: {}, worker_id: {}",
+                                        gridbuffer.estimated_bytes(),
+                                        self.worker_id
+                                    );
 
                                     file.write_all(gridbuffer.to_base64().as_bytes())?;
                                     file.write_all(b"\n")?;
@@ -476,10 +481,27 @@ impl SampleSaverWorker {
                 _ = subsys.on_shutdown_requested() => {
                     info!("sample saver worker shutdown!");
                     self.set_worker_state(WorkerState::Success);
-                    return Ok(());
+                    break;
                 }
             }
         }
+
+        self.window_heap.process_remain_data();
+
+        if self.window_heap.out_gridbuffers().len() > 0 {
+            while let Some(gridbuffer) = self.window_heap.get_out_gridbuffer() {
+                file.write_all(gridbuffer.to_base64().as_bytes())?;
+                file.write_all(b"\n")?;
+
+                let mut worker_info = unsafe { &mut *self.worker_info.get() };
+                worker_info.total += 1;
+            }
+        }
+
+        info!(
+            "sample saver worker done, filename: {}",
+            self.filename.clone()
+        );
 
         Ok(())
     }

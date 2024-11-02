@@ -9,6 +9,7 @@ use mysql::PooledConn;
 use anyhow::{bail, Result};
 
 use crate::droplet::ColumnInfo;
+use crate::droplet::DataType;
 use crate::droplet::NodeInfo;
 use crate::droplet::NodeStatus;
 use crate::droplet::PartitionInfo;
@@ -130,11 +131,11 @@ pub fn insert_table_info(
     conn: &mut PooledConn,
     table_name: &str,
     partition_count_per_day: u32,
-    columns: Vec<ColumnInfo>,
+    columns: &Vec<ColumnInfo>,
 ) -> Result<()> {
     // Insert table info.
     conn.exec_drop(
-        "INSERT INTO table_info (table_name, partition_count_per_day) VALUES (:table_name, :partition_count_per_day)",
+        "INSERT IGNORE INTO table_info (table_name, partition_count_per_day) VALUES (:table_name, :partition_count_per_day)",
         params! {
             "table_name" => table_name.to_string(),
             "partition_count_per_day" => partition_count_per_day,
@@ -185,9 +186,9 @@ pub fn get_table_column_infos(conn: &mut PooledConn, table_name: &str) -> Result
         WHERE table_name = '{}'",
             table_name.to_string()
         ),
-        |row: (String, String, u32, u32)| ColumnInfo {
+        |row: (String, i32, u32, u32)| ColumnInfo {
             column_name: row.0,
-            column_type: row.1,
+            column_type: row.1.into(),
             column_id: row.2,
             column_index: row.3,
         },
@@ -436,4 +437,36 @@ pub fn get_table_paths_by_date(
         .collect();
 
     Ok(partition_paths)
+}
+
+pub fn get_server_endpoint_by_partition_index(
+    conn: &mut PooledConn,
+    table: &str,
+    partition_index: u32,
+) -> Result<String> {
+    conn.query_first::<String, _>(format!(
+        "SELECT 
+            concat(n.node_name, ':', n.node_port) endpoint
+        FROM partition_info p
+        JOIN worker_node_info n ON p.node_id = n.id
+        WHERE p.table_name = '{}' AND p.partition_index = {}",
+        table, partition_index
+    ))?
+    .ok_or_else(|| {
+        anyhow::anyhow!(
+            "Server endpoint not found for table: {}, partition_index: {}",
+            table,
+            partition_index
+        )
+    })
+}
+
+pub fn is_table_exist(conn: &mut PooledConn, table: &str) -> Result<bool> {
+    match conn.query_first::<u32, _>(format!(
+        "SELECT 1 FROM table_info WHERE table_name = '{}'",
+        table.to_string()
+    ))? {
+        Some(_) => Ok(true),
+        None => Ok(false),
+    }
 }
